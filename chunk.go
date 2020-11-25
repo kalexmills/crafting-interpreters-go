@@ -1,8 +1,13 @@
 package main
 
-const (
+const ( // N.B. these op-codes will not match those in the book (yet) at the commit where the list is complete it will be reordered.
 	OP_RETURN byte = iota
 	OP_CONSTANT
+	OP_NEGATE
+	OP_ADD
+	OP_SUBTRACT
+	OP_MULTIPLY
+	OP_DIVIDE
 )
 
 // Chunk is a chunk

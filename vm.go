@@ -30,6 +30,11 @@ func Interpret(chunk *Chunk) InterpretResult {
 	return run()
 }
 
+var ADD = func(a, b Value) Value { return a + b }
+var SUB = func(a, b Value) Value { return a - b }
+var MUL = func(a, b Value) Value { return a * b }
+var DIV = func(a, b Value) Value { return a / b }
+
 func run() InterpretResult {
 	for {
 		if DEBUG_TRACE_EXECUTION {
@@ -47,12 +52,27 @@ func run() InterpretResult {
 		case OP_CONSTANT:
 			constant := vm.readConstant()
 			vm.push(constant)
+		case OP_NEGATE:
+			vm.push(-vm.pop())
+		case OP_ADD:
+			vm.binaryOp(ADD)
+		case OP_SUBTRACT:
+			vm.binaryOp(SUB)
+		case OP_MULTIPLY:
+			vm.binaryOp(MUL)
+		case OP_DIVIDE:
+			vm.binaryOp(DIV)
 		case OP_RETURN:
 			vm.pop().Print()
 			println()
 			return INTERPRET_OK
 		}
 	}
+}
+
+func (v *VM) binaryOp(op func(Value, Value) Value) {
+	b, a := v.pop(), v.pop()
+	v.push(op(a, b))
 }
 
 func (v *VM) readByte() byte {
