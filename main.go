@@ -1,24 +1,53 @@
 package main
 
+import (
+	"bufio"
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+
 func main() {
-	chunk := Chunk{}
-	constant := chunk.AddConstant(1.2)
-	chunk.Write(OP_CONSTANT, 123)
-	chunk.Write(byte(constant), 123)
+	if len(os.Args) == 1 {
+		repl()
+	} else if len(os.Args) == 2 {
+		runFile(os.Args[1])
+	} else {
+		fmt.Errorf("Usage: clox [path]\n")
+		os.Exit(64)
+	}
+}
 
-	constant = chunk.AddConstant(3.4)
-	chunk.Write(OP_CONSTANT, 123)
-	chunk.Write(byte(constant), 123)
+func interpret(source string) InterpretResult {
+	compile(source)
+	return INTERPRET_OK
+}
 
-	chunk.Write(OP_ADD, 123)
+func repl() {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Printf("> ")
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("could not read from stdin: %v", err)
+			os.Exit(1)
+		}
+		fmt.Println()
+		interpret(line)
+	}
+}
 
-	constant = chunk.AddConstant(5.6)
-	chunk.Write(OP_CONSTANT, 123)
-	chunk.Write(byte(constant), 123)
-
-	chunk.Write(OP_DIVIDE, 123)
-	chunk.Write(OP_NEGATE, 123)
-	chunk.Write(OP_RETURN, 123)
-	DisassembleChunk(&chunk, "test chunk")
-	Interpret(&chunk)
+func runFile(path string) {
+	source, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Printf("could not read file %s: %v", path, err)
+		os.Exit(1)
+	}
+	result := interpret(string(source))
+	if result == INTERPRET_COMPILE_ERROR {
+		os.Exit(65)
+	}
+	if result == INTERPRET_RUNTIME_ERROR {
+		os.Exit(70)
+	}
 }
