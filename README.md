@@ -3,7 +3,7 @@ Part 2 of [Crafting Interpreters](https://craftinginterpreters.com/), chapter by
 
 ### Chapter by Chapter
 
-Below links are to the final commits made after porting each chapter.
+Below links reference the final commits made after porting each chapter.
 
 * **[Chapter 14](https://github.com/kalexmills/crafting-interpreters-go/releases/tag/ch14)** ([browse](https://github.com/kalexmills/crafting-interpreters-go/tree/ch14))
 * **[Chapter 15](https://github.com/kalexmills/crafting-interpreters-go/releases/tag/ch15)** ([browse](https://github.com/kalexmills/crafting-interpreters-go/tree/ch15))
