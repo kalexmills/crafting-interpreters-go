@@ -90,7 +90,14 @@ func run() InterpretResult {
 				return INTERPRET_COMPILE_ERROR
 			}
 		case OP_ADD:
-			if !vm.binaryOp(ADD) {
+			if isString(vm.peek(0)) && isString(vm.peek(1)) {
+				concatenate()
+			} else if isNumber(vm.peek(0)) && isNumber(vm.peek(1)) {
+				if !vm.binaryOp(ADD) {
+					return INTERPRET_RUNTIME_ERROR
+				}
+			} else {
+				runtimeError("Operands must be two numbers or two strings.")
 				return INTERPRET_RUNTIME_ERROR
 			}
 		case OP_SUBTRACT:
@@ -132,12 +139,20 @@ func valuesEqual(a, b Value) bool {
 		return true
 	case VAL_NUMBER:
 		return a.AsNumber() == b.AsNumber()
+	case VAL_OBJ:
+		a, b := asString(a), asString(b)
+		return a.value == b.value
 	}
 	return false
 }
 
 func isFalsey(value Value) bool {
 	return isNil(value) || (isBool(value) && !value.AsBoolean())
+}
+
+func concatenate() {
+	b, a := asString(vm.pop()), asString(vm.pop())
+	vm.push(NewObjString(a.value + b.value))
 }
 
 func (v *VM) binaryOp(op func(float64, float64) Value) bool {

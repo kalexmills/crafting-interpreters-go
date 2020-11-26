@@ -189,8 +189,13 @@ func compileGrouping() {
 }
 
 func compileNumber() {
+	// N.B. error from ParseFlot is safely ignored because our scanner correctly identifies valid input
 	value, _ := strconv.ParseFloat((*parser.Previous.Source)[parser.Previous.Start:parser.Previous.Start+parser.Previous.Length], 64)
 	emitConstant(NumberVal(value))
+}
+
+func compileString() {
+	emitConstant(NewObjString((*parser.Previous.Source)[parser.Previous.Start+1 : parser.Previous.Start+1+parser.Previous.Length-2]))
 }
 
 func compileUnary() {
@@ -243,7 +248,7 @@ func init() {
 		TOKEN_LESS:          {nil, compileBinary, PREC_COMPARISON},
 		TOKEN_LESS_EQUAL:    {nil, compileBinary, PREC_COMPARISON},
 		TOKEN_IDENTIFIER:    {nil, nil, PREC_NONE},
-		TOKEN_STRING:        {nil, nil, PREC_NONE},
+		TOKEN_STRING:        {compileString, nil, PREC_NONE},
 		TOKEN_NUMBER:        {compileNumber, nil, PREC_NONE},
 		TOKEN_AND:           {nil, nil, PREC_NONE},
 		TOKEN_CLASS:         {nil, nil, PREC_NONE},
