@@ -3,6 +3,7 @@ package main
 import "fmt"
 
 const DEBUG_TRACE_EXECUTION = true // N.B. this does not use conditional compilation; it's handled at runtime.
+const DEBUG_PRINT_CODE = true
 
 var vm VM
 
@@ -23,6 +24,20 @@ const (
 	INTERPRET_COMPILE_ERROR
 	INTERPRET_RUNTIME_ERROR
 )
+
+func interpret(source string) InterpretResult {
+	var chunk Chunk
+
+	if !compile(source, &chunk) {
+		return INTERPRET_COMPILE_ERROR
+	}
+
+	vm.chunk = &chunk
+	vm.ip = 0
+	result := run()
+
+	return result
+}
 
 func Interpret(chunk *Chunk) InterpretResult {
 	vm.chunk = chunk

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 )
@@ -18,16 +19,15 @@ func main() {
 	}
 }
 
-func interpret(source string) InterpretResult {
-	compile(source)
-	return INTERPRET_OK
-}
-
 func repl() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Printf("> ")
 		line, err := reader.ReadString('\n')
+		if err == io.EOF {
+			fmt.Println()
+			os.Exit(0)
+		}
 		if err != nil {
 			fmt.Printf("could not read from stdin: %v", err)
 			os.Exit(1)

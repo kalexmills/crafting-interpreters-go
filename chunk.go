@@ -10,7 +10,6 @@ const ( // N.B. these op-codes will not match those in the book (yet) at the com
 	OP_DIVIDE
 )
 
-// Chunk is a chunk
 type Chunk struct {
 	// N.B. the dynamic array implementation in go handles all the features mentioned in the book.
 	Code      []byte

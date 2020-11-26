@@ -19,7 +19,7 @@ func initScanner(source string) {
 type Token struct {
 	Type   TokenType
 	Line   int
-	Start  int // N.B. integer offset, not a C-pointer
+	Start  int // N.B. integer offset into source, not a C-pointer
 	Length int
 	Source *string
 }
@@ -31,7 +31,7 @@ func scanToken() Token {
 	if isAtEnd() {
 		return makeToken(TOKEN_EOF)
 	}
-	c := advance()
+	c := advanceScanner()
 	if isAlpha(c) {
 		return identifier()
 	}
@@ -99,7 +99,7 @@ func isAlpha(c byte) bool {
 
 func identifier() Token {
 	for isAlpha(peek()) || isDigit(peek()) {
-		advance()
+		advanceScanner()
 	}
 	return makeToken(identifierType())
 }
@@ -166,13 +166,13 @@ func isDigit(c byte) bool {
 
 func number() Token {
 	for isDigit(peek()) {
-		advance()
+		advanceScanner()
 	}
 	// check for a fractional part
 	if peek() == '.' && isDigit(peekNext()) {
-		advance()
+		advanceScanner()
 		for isDigit(peek()) {
-			advance()
+			advanceScanner()
 		}
 	}
 	return makeToken(TOKEN_NUMBER)
@@ -183,12 +183,12 @@ func makeString() Token {
 		if peek() == '\n' {
 			scanner.Line++
 		}
-		advance()
+		advanceScanner()
 	}
 	if isAtEnd() {
 		return errorToken("unterminated string.")
 	}
-	advance()
+	advanceScanner()
 	return makeToken(TOKEN_STRING)
 }
 
@@ -197,18 +197,18 @@ func skipWhitespace() {
 		c := peek()
 		switch c {
 		case ' ':
-			advance()
+			advanceScanner()
 		case '\r':
-			advance()
+			advanceScanner()
 		case '\t':
-			advance()
+			advanceScanner()
 		case '\n':
 			scanner.Line++
-			advance()
+			advanceScanner()
 		case '/': // skip comments
 			if peekNext() == '/' {
 				for peek() != '\n' && !isAtEnd() {
-					advance()
+					advanceScanner()
 				}
 			} else {
 				return
@@ -232,7 +232,7 @@ func peekNext() byte {
 	return scanner.Source[scanner.Current+1]
 }
 
-func advance() byte {
+func advanceScanner() byte {
 	scanner.Current++
 	return scanner.Source[scanner.Current-1]
 }
