@@ -3,11 +3,18 @@ package main
 const ( // N.B. these op-codes will not match those in the book (yet) at the commit where the list is complete it will be reordered.
 	OP_RETURN byte = iota
 	OP_CONSTANT
-	OP_NEGATE
+	OP_NIL
+	OP_FALSE
+	OP_TRUE
+	OP_EQUAL
+	OP_GREATER
+	OP_LESS
 	OP_ADD
 	OP_SUBTRACT
 	OP_MULTIPLY
 	OP_DIVIDE
+	OP_NOT
+	OP_NEGATE
 )
 
 type Chunk struct {

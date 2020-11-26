@@ -48,10 +48,12 @@ func Interpret(chunk *Chunk) InterpretResult {
 	return run()
 }
 
-var ADD = func(a, b float64) float64 { return a + b }
-var SUB = func(a, b float64) float64 { return a - b }
-var MUL = func(a, b float64) float64 { return a * b }
-var DIV = func(a, b float64) float64 { return a / b }
+var ADD = func(a, b float64) Value { return NumberVal(a + b) }
+var SUB = func(a, b float64) Value { return NumberVal(a - b) }
+var MUL = func(a, b float64) Value { return NumberVal(a * b) }
+var DIV = func(a, b float64) Value { return NumberVal(a / b) }
+var GT = func(a, b float64) Value { return BoolVal(a > b) }
+var LT = func(a, b float64) Value { return BoolVal(a < b) }
 
 func run() InterpretResult {
 	for {
@@ -76,6 +78,17 @@ func run() InterpretResult {
 				return INTERPRET_RUNTIME_ERROR
 			}
 			vm.push(NumberVal(-vm.pop().AsNumber()))
+		case OP_EQUAL:
+			b, a := vm.pop(), vm.pop()
+			vm.push(BoolVal(valuesEqual(a, b)))
+		case OP_GREATER:
+			if !vm.binaryOp(GT) {
+				return INTERPRET_COMPILE_ERROR
+			}
+		case OP_LESS:
+			if !vm.binaryOp(LT) {
+				return INTERPRET_COMPILE_ERROR
+			}
 		case OP_ADD:
 			if !vm.binaryOp(ADD) {
 				return INTERPRET_RUNTIME_ERROR
@@ -92,6 +105,14 @@ func run() InterpretResult {
 			if !vm.binaryOp(DIV) {
 				return INTERPRET_RUNTIME_ERROR
 			}
+		case OP_NOT:
+			vm.push(BoolVal(isFalsey(vm.pop())))
+		case OP_NIL:
+			vm.push(NilVal(struct{}{}))
+		case OP_TRUE:
+			vm.push(BoolVal(true))
+		case OP_FALSE:
+			vm.push(BoolVal(false))
 		case OP_RETURN:
 			vm.pop().Print()
 			println()
@@ -100,13 +121,32 @@ func run() InterpretResult {
 	}
 }
 
-func (v *VM) binaryOp(op func(float64, float64) float64) bool {
+func valuesEqual(a, b Value) bool {
+	if a.Type() != b.Type() {
+		return false
+	}
+	switch a.Type() {
+	case VAL_BOOL:
+		return a.AsBoolean() == b.AsBoolean()
+	case VAL_NIL:
+		return true
+	case VAL_NUMBER:
+		return a.AsNumber() == b.AsNumber()
+	}
+	return false
+}
+
+func isFalsey(value Value) bool {
+	return isNil(value) || (isBool(value) && !value.AsBoolean())
+}
+
+func (v *VM) binaryOp(op func(float64, float64) Value) bool {
 	if !isNumber(v.peek(0)) || !isNumber(v.peek(1)) {
 		runtimeError("Operands must be numbers.")
 		return false
 	}
 	b, a := v.pop().AsNumber(), v.pop().AsNumber()
-	v.push(NumberVal(op(a, b)))
+	v.push(op(a, b))
 	return true
 }
 

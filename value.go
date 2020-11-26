@@ -27,6 +27,24 @@ func isNil(v Value) bool {
 	return v.Type() == VAL_NIL
 }
 
+type NilVal struct{}
+
+func (nv NilVal) Type() ValueType {
+	return VAL_NIL
+}
+
+func (nv NilVal) AsBoolean() bool {
+	panic("nil value is not a boolean!")
+}
+
+func (nv NilVal) AsNumber() float64 {
+	panic("nil value is not a number!")
+}
+
+func (nv NilVal) Print() {
+	fmt.Printf("nil")
+}
+
 type BoolVal bool
 
 func (bv BoolVal) Type() ValueType {

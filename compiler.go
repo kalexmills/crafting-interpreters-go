@@ -160,6 +160,18 @@ func compileBinary() {
 	parsePrecedence(Precedence(rule.Precedence + 1))
 
 	switch operatorType {
+	case TOKEN_BANG_EQUAL:
+		emitBytes(OP_EQUAL, OP_NOT)
+	case TOKEN_EQUAL_EQUAL:
+		emitByte(OP_EQUAL)
+	case TOKEN_GREATER:
+		emitByte(OP_GREATER)
+	case TOKEN_GREATER_EQUAL:
+		emitBytes(OP_LESS, OP_NOT)
+	case TOKEN_LESS:
+		emitByte(OP_LESS)
+	case TOKEN_LESS_EQUAL:
+		emitBytes(OP_GREATER, OP_NOT)
 	case TOKEN_PLUS:
 		emitByte(OP_ADD)
 	case TOKEN_MINUS:
@@ -187,10 +199,23 @@ func compileUnary() {
 	parsePrecedence(PREC_UNARY)
 
 	switch operatorType {
+	case TOKEN_BANG:
+		emitByte(OP_NOT)
 	case TOKEN_MINUS:
 		emitByte(OP_NEGATE)
 	default:
 		return
+	}
+}
+
+func compileLiteral() {
+	switch parser.Previous.Type {
+	case TOKEN_FALSE:
+		emitByte(OP_FALSE)
+	case TOKEN_NIL:
+		emitByte(OP_NIL)
+	case TOKEN_TRUE:
+		emitByte(OP_TRUE)
 	}
 }
 
@@ -209,31 +234,31 @@ func init() {
 		TOKEN_SEMICOLON:     {nil, nil, PREC_NONE},
 		TOKEN_SLASH:         {nil, compileBinary, PREC_FACTOR},
 		TOKEN_STAR:          {nil, compileBinary, PREC_FACTOR},
-		TOKEN_BANG:          {nil, nil, PREC_NONE},
-		TOKEN_BANG_EQUAL:    {nil, nil, PREC_NONE},
+		TOKEN_BANG:          {compileUnary, nil, PREC_NONE},
+		TOKEN_BANG_EQUAL:    {nil, compileBinary, PREC_EQUALITY},
 		TOKEN_EQUAL:         {nil, nil, PREC_NONE},
-		TOKEN_EQUAL_EQUAL:   {nil, nil, PREC_NONE},
-		TOKEN_GREATER:       {nil, nil, PREC_NONE},
-		TOKEN_GREATER_EQUAL: {nil, nil, PREC_NONE},
-		TOKEN_LESS:          {nil, nil, PREC_NONE},
-		TOKEN_LESS_EQUAL:    {nil, nil, PREC_NONE},
+		TOKEN_EQUAL_EQUAL:   {nil, compileBinary, PREC_EQUALITY},
+		TOKEN_GREATER:       {nil, compileBinary, PREC_COMPARISON},
+		TOKEN_GREATER_EQUAL: {nil, compileBinary, PREC_COMPARISON},
+		TOKEN_LESS:          {nil, compileBinary, PREC_COMPARISON},
+		TOKEN_LESS_EQUAL:    {nil, compileBinary, PREC_COMPARISON},
 		TOKEN_IDENTIFIER:    {nil, nil, PREC_NONE},
 		TOKEN_STRING:        {nil, nil, PREC_NONE},
 		TOKEN_NUMBER:        {compileNumber, nil, PREC_NONE},
 		TOKEN_AND:           {nil, nil, PREC_NONE},
 		TOKEN_CLASS:         {nil, nil, PREC_NONE},
 		TOKEN_ELSE:          {nil, nil, PREC_NONE},
-		TOKEN_FALSE:         {nil, nil, PREC_NONE},
+		TOKEN_FALSE:         {compileLiteral, nil, PREC_NONE},
 		TOKEN_FOR:           {nil, nil, PREC_NONE},
 		TOKEN_FUN:           {nil, nil, PREC_NONE},
 		TOKEN_IF:            {nil, nil, PREC_NONE},
-		TOKEN_NIL:           {nil, nil, PREC_NONE},
+		TOKEN_NIL:           {compileLiteral, nil, PREC_NONE},
 		TOKEN_OR:            {nil, nil, PREC_NONE},
 		TOKEN_PRINT:         {nil, nil, PREC_NONE},
 		TOKEN_RETURN:        {nil, nil, PREC_NONE},
 		TOKEN_SUPER:         {nil, nil, PREC_NONE},
 		TOKEN_THIS:          {nil, nil, PREC_NONE},
-		TOKEN_TRUE:          {nil, nil, PREC_NONE},
+		TOKEN_TRUE:          {compileLiteral, nil, PREC_NONE},
 		TOKEN_VAR:           {nil, nil, PREC_NONE},
 		TOKEN_WHILE:         {nil, nil, PREC_NONE},
 		TOKEN_ERROR:         {nil, nil, PREC_NONE},
