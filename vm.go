@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 const DEBUG_TRACE_EXECUTION = true // N.B. this does not use conditional compilation; it's handled at runtime.
 const DEBUG_PRINT_CODE = true
@@ -45,10 +48,10 @@ func Interpret(chunk *Chunk) InterpretResult {
 	return run()
 }
 
-var ADD = func(a, b Value) Value { return a + b }
-var SUB = func(a, b Value) Value { return a - b }
-var MUL = func(a, b Value) Value { return a * b }
-var DIV = func(a, b Value) Value { return a / b }
+var ADD = func(a, b float64) float64 { return a + b }
+var SUB = func(a, b float64) float64 { return a - b }
+var MUL = func(a, b float64) float64 { return a * b }
+var DIV = func(a, b float64) float64 { return a / b }
 
 func run() InterpretResult {
 	for {
@@ -68,15 +71,27 @@ func run() InterpretResult {
 			constant := vm.readConstant()
 			vm.push(constant)
 		case OP_NEGATE:
-			vm.push(-vm.pop())
+			if !isNumber(vm.peek(0)) {
+				runtimeError("Operand must be a number.")
+				return INTERPRET_RUNTIME_ERROR
+			}
+			vm.push(NumberVal(-vm.pop().AsNumber()))
 		case OP_ADD:
-			vm.binaryOp(ADD)
+			if !vm.binaryOp(ADD) {
+				return INTERPRET_RUNTIME_ERROR
+			}
 		case OP_SUBTRACT:
-			vm.binaryOp(SUB)
+			if !vm.binaryOp(SUB) {
+				return INTERPRET_RUNTIME_ERROR
+			}
 		case OP_MULTIPLY:
-			vm.binaryOp(MUL)
+			if !vm.binaryOp(MUL) {
+				return INTERPRET_RUNTIME_ERROR
+			}
 		case OP_DIVIDE:
-			vm.binaryOp(DIV)
+			if !vm.binaryOp(DIV) {
+				return INTERPRET_RUNTIME_ERROR
+			}
 		case OP_RETURN:
 			vm.pop().Print()
 			println()
@@ -85,9 +100,14 @@ func run() InterpretResult {
 	}
 }
 
-func (v *VM) binaryOp(op func(Value, Value) Value) {
-	b, a := v.pop(), v.pop()
-	v.push(op(a, b))
+func (v *VM) binaryOp(op func(float64, float64) float64) bool {
+	if !isNumber(v.peek(0)) || !isNumber(v.peek(1)) {
+		runtimeError("Operands must be numbers.")
+		return false
+	}
+	b, a := v.pop().AsNumber(), v.pop().AsNumber()
+	v.push(NumberVal(op(a, b)))
+	return true
 }
 
 func (v *VM) readByte() byte {
@@ -105,6 +125,10 @@ func (v *VM) resetStack() {
 	vm.stackTop = 0
 }
 
+func (v VM) peek(distance int) Value {
+	return vm.stack[vm.stackTop-distance-1]
+}
+
 func (v *VM) push(value Value) {
 	v.stack[v.stackTop] = value
 	v.stackTop++
@@ -113,4 +137,12 @@ func (v *VM) push(value Value) {
 func (v *VM) pop() Value {
 	v.stackTop--
 	return v.stack[v.stackTop]
+}
+
+func runtimeError(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, a...)
+	fmt.Fprintln(os.Stderr)
+	instruction := vm.ip - 1
+	line := vm.chunk.lines[instruction]
+	fmt.Fprintf(os.Stderr, "[line %d] in script\n", line)
 }

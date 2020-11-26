@@ -178,7 +178,7 @@ func compileGrouping() {
 
 func compileNumber() {
 	value, _ := strconv.ParseFloat((*parser.Previous.Source)[parser.Previous.Start:parser.Previous.Start+parser.Previous.Length], 64)
-	emitConstant(Value(value))
+	emitConstant(NumberVal(value))
 }
 
 func compileUnary() {
